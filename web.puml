@@ -1,0 +1,18 @@
+@startuml
+' 用例图
+left to right direction
+actor "学生" as student
+actor "教师" as teacher
+actor "管理人员" as admin
+rectangle "系统" {
+    usecase "提交评价" as submit_evaluation
+    usecase "查看评价" as view_evaluation
+    usecase "生成报告" as generate_report
+    usecase "系统监控" as system_monitoring
+}
+
+student --> submit_evaluation
+teacher --> view_evaluation
+admin --> generate_report
+admin --> system_monitoring
+@enduml
