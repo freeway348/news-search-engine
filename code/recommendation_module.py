@@ -16,8 +16,7 @@ import math
 
 import pandas as pd
 import numpy as np
-
-from sklearn.metrics import pairwise_distances
+from sklearn.metrics.pairwise import cosine_similarity
 
 class RecommendationModule:
     stop_words = set()
@@ -34,6 +33,13 @@ class RecommendationModule:
     db_path = ''
     
     def __init__(self, config_path, config_encoding):
+        self.config = configparser.ConfigParser()
+        with open(config_path, encoding=config_encoding) as f:
+            self.config.read_file(f)
+        self.k_nearest_matrix = []
+        # 添加k_nearest_path属性
+        self.k_nearest_path = self.config['DEFAULT']['k_nearest_path']
+
         self.config_path = config_path
         self.config_encoding = config_encoding
         config = configparser.ConfigParser()
@@ -111,19 +117,23 @@ class RecommendationModule:
         return dt_matrix
         
     def construct_k_nearest_matrix(self, dt_matrix, k):
-        tmp = np.array(1 - pairwise_distances(dt_matrix[dt_matrix.columns[1:]], metric = "cosine"))
-        similarity_matrix = pd.DataFrame(tmp, index = dt_matrix.index.tolist(), columns = dt_matrix.index.tolist())
-        for i in similarity_matrix.index:
-            tmp = [int(i),[]]
-            j = 0
-            while j < k:
-                max_col = similarity_matrix.loc[i].idxmax(axis = 1)
-                similarity_matrix.loc[i][max_col] =  -1
-                if max_col != i:
-                    tmp[1].append(int(max_col)) #max column name
-                    j += 1
-            self.k_nearest.append(tmp)
-    
+        self.k_nearest_matrix = []
+        similarity_matrix = pd.DataFrame(cosine_similarity(dt_matrix))
+        
+        for i in range(len(similarity_matrix)):
+            # Series对象不需要指定axis参数
+            current_similarities = similarity_matrix.loc[i]
+            # 将当前文档自身的相似度设为最小值，避免被选中
+            current_similarities[i] = -1
+            # 获取前k个最相似文档的索引
+            top_k_indices = current_similarities.nlargest(k).index.tolist()
+            self.k_nearest_matrix.append(top_k_indices)
+        
+        # 将结果写入文件    
+        with open(self.k_nearest_path, 'w', encoding=self.config['DEFAULT']['k_nearest_encoding']) as f:
+            for doc_id, k_nearest_ids in enumerate(self.k_nearest_matrix):
+                f.write('%d %s\n'%(doc_id + 1, ' '.join(map(lambda x: str(x + 1), k_nearest_ids))))
+
     def gen_idf_file(self):
         files = listdir(self.doc_dir_path)
         n = float(len(files))
@@ -159,4 +169,3 @@ if __name__ == "__main__":
     rm = RecommendationModule('../config.ini', 'utf-8')
     rm.find_k_nearest(5, 25)
     print('-----finish time: %s-----'%(datetime.today()))
-    
