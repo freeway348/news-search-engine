@@ -1,3 +1,4 @@
+# 备份
 # -*- coding: utf-8 -*-
 """
 Created on Sun Mar 29 17:32:40 2020
@@ -153,136 +154,36 @@ def get_max_existing_id(doc_dir_path):
         print(f"检查现有新闻文件时出错: {str(e)}")
         return 0
 
-def get_one_page_sohu_news(page_url):
-    root = 'https://www.sohu.com'
-    req = urllib.request.Request(page_url, headers={
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/91.0.4472.124',
-        'Referer': 'https://www.sohu.com/'
-    })
-    
-    try:
-        response = urllib.request.urlopen(req, timeout=3)
-        html = response.read()
-    except Exception as err:
-        print(f"Error accessing {page_url}: {str(err)}")
-        return []
-    
-    soup = BeautifulSoup(html, "html.parser")
-    news_pool = []
-    
-    news_list = soup.find('div', class_="list16")
-    if not news_list:
-        return []
-        
-    for item in news_list.find_all('a'):
-        try:
-            title = item.get_text().strip()
-            if not title:
-                continue
-                
-            url = item.get('href', '')
-            if not url or url.startswith('#'):
-                continue
-                
-            if not url.startswith('http'):
-                url = root + url
-                
-            date_time = time.strftime('%Y-%m-%d %H:%M:%S')
-            news_info = [date_time, url, title]
-            news_pool.append(news_info)
-        except Exception as e:
-            continue
-            
-    return news_pool
-
-def get_sohu_news_pool(start_date):
-    date_str = start_date.strftime("%Y%m%d")
-    page_url = f'https://www.sohu.com/c/news/{date_str}'
-    print(f'获取搜狐新闻: {date_str}')
-    return get_one_page_sohu_news(page_url)
-
 if __name__ == '__main__':
     config = configparser.ConfigParser()
     config_path = os.path.join(os.path.dirname(__file__), '..', 'config.ini')
     with open(config_path, 'r', encoding='utf-8') as f:
         config.read_file(f)
     
-    # 获取已存在的最大新闻ID
+    target_news_count = 2500
+    # 检测已存在的最大新闻ID
     next_start_id = get_max_existing_id(config['DEFAULT']['doc_dir_path']) + 1
     print(f"将从ID {next_start_id} 开始继续获取新闻")
     
-    # 中国新闻网爬取
-    target_chinanews_count = 2500
-    if next_start_id <= target_chinanews_count:
-        while next_start_id <= target_chinanews_count:
-            delta = timedelta(days=-5)
-            # 根据当前ID计算日期偏移
-            end_date = date.today() - timedelta(days=(next_start_id-1)//500)
-            start_date = end_date + delta
-            
-            print(f'\n开始获取{start_date}到{end_date}的新闻')
-            news_pool = get_news_pool(start_date, end_date)
-            print(f'获取到{len(news_pool)}条新闻链接')
-            
-            # 传入当前的next_start_id作为起始ID
-            last_news_id = crawl_news(news_pool, target_chinanews_count, config['DEFAULT']['doc_dir_path'], 
-                                    config['DEFAULT']['doc_encoding'], next_start_id)
-            
-            if last_news_id >= target_chinanews_count:
-                print(f'\n成功生成{last_news_id}条新闻数据!')
-                break
-            else:
-                print(f'\n当前已生成到第{last_news_id}条新闻，继续获取...')
-                next_start_id = last_news_id + 1  # 更新下一次的起始ID
-    
-    # 搜狐新闻爬取
-    target_sohu_count = 1000
-    sohu_start_id = max(next_start_id, target_chinanews_count + 1)
-    print(f"\n开始爬取搜狐新闻，起始ID: {sohu_start_id}")
-    
-    sohu_news_pool = []
-    current_date = date.today()
-    attempts = 0
-    
-    while len(sohu_news_pool) < target_sohu_count and attempts < 30:
-        current_pool = get_sohu_news_pool(current_date)
-        if current_pool:
-            sohu_news_pool.extend(current_pool)
-            print(f"当前获取到{len(sohu_news_pool)}条搜狐新闻")
+    while next_start_id <= target_news_count:
+        delta = timedelta(days=-5)
+        # 根据当前ID计算日期偏移
+        end_date = date.today() - timedelta(days=(next_start_id-1)//500)
+        start_date = end_date + delta
         
-        current_date -= timedelta(days=1)
-        attempts += 1
-        time.sleep(2)
+        print(f'\n开始获取{start_date}到{end_date}的新闻')
+        news_pool = get_news_pool(start_date, end_date)
+        print(f'获取到{len(news_pool)}条新闻链接')
+        
+        # 传入当前的next_start_id作为起始ID
+        last_news_id = crawl_news(news_pool, target_news_count, config['DEFAULT']['doc_dir_path'], 
+                                config['DEFAULT']['doc_encoding'], next_start_id)
+        
+        if last_news_id >= target_news_count:
+            print(f'\n成功生成{last_news_id}条新闻数据!')
+            break
+        else:
+            print(f'\n当前已生成到第{last_news_id}条新闻，继续获取...')
+            next_start_id = last_news_id + 1  # 更新下一次的起始ID
     
-    if sohu_news_pool:
-        last_sohu_id = crawl_news(sohu_news_pool[:target_sohu_count], target_sohu_count,
-                                config['DEFAULT']['doc_dir_path'],
-                                config['DEFAULT']['doc_encoding'],
-                                sohu_start_id)
-        print(f'\n搜狐新闻爬取完成，共{last_sohu_id - sohu_start_id + 1}条!')
-    else:
-        print("\n未能获取到搜狐新闻")
-        last_sohu_id = sohu_start_id
-
-    # 腾讯新闻爬取
-    target_tencent_count = 1500
-    tencent_start_id = max(last_sohu_id + 1, target_chinanews_count + target_sohu_count + 1)
-    print(f"\n开始爬取腾讯新闻，起始ID: {tencent_start_id}")
-    
-    page_num = 1
-    tencent_news_pool = []
-    while len(tencent_news_pool) < target_tencent_count and page_num <= 150:
-        print(f"正在获取腾讯新闻第{page_num}页")
-        tencent_news_pool.extend(get_one_page_tencent_news(page_num))
-        page_num += 1
-        time.sleep(1)
-    
-    last_tencent_id = crawl_news(tencent_news_pool, target_tencent_count,
-                                config['DEFAULT']['doc_dir_path'],
-                                config['DEFAULT']['doc_encoding'],
-                                tencent_start_id)
-    
-    print('\n全部爬取完成!')
-    print(f'中国新闻网: {target_chinanews_count}条')
-    print(f'搜狐新闻: {last_sohu_id - sohu_start_id + 1}条')
-    print(f'腾讯新闻: {last_tencent_id - tencent_start_id + 1}条')
+    print('完成!')
