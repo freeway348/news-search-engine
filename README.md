@@ -1,5 +1,5 @@
 # 新闻搜索引擎
-<img src="./news_search_engine3.png" width = "650" align=center />
+<img src="./News_search_engine.png" width = "650" align=center />
 
 # 使用方法
 1. 安装python 3.4+环境（推荐[Anaconda](https://www.anaconda.com/distribution/)或[Miniconda](https://docs.conda.io/en/latest/miniconda.html)）
