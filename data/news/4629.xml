@@ -1,0 +1,17 @@
+<?xml version='1.0' encoding='utf-8'?>
+<doc><id>4629</id><url>https://finance.sina.com.cn/tech/discovery/2025-05-21/doc-inexetxa1994518.shtml</url><title>Intel下代处理器Panther Lake首次公开运行：明年大规模上市</title><datetime>2025-05-20 13:00</datetime><body>	快科技5月20日消息，台北电脑展上，Intel首次公开运行了下一代Panther Lake处理器，预计叫酷睿Ultra 300系列。
+	不同于之前CES 2025上只是简单的点亮系统、静态展示，Intel这次实际运行了渲染、AI应用。
+	这说明，Panther Lake目前是相当健康的，后续量产、发布应该会很顺利。
+	首先是一颗Panther Lake的裸片，可以清楚滴看到CPU、GPU、I/O、SoC等不同模块封装组合在一起。
+	按照Intel的说法，其中最主要的CPU模块是首发采用Intel 18A工艺，整体采用自家工艺的比例不低于70％，但其他模块的具体情况暂时不详。
+	Intel强调，Panther Lake融合了Lunar Lake的高能效、Arrow Lake-H的高性能，这也弥补了前者没有直接后代的遗憾。
+	另外，它会升级新一代NPU AI引擎，新一代GPU核显(Xe3架构)，支持LPDDR5X、DDR5内存。
+	时间节奏上，Panther Lake将在今年下半年如期量产，OEM厂商会在2026年初发布相关产品。
+	根据此前说法，Panther Lake会在今年底发布至少一款型号，大概率明年初的CES 2026上全线登场，笔记本、掌机等产品随后陆续到来。
+	Intel现场展示了两套RVP参考验证平台，都是开发用的，并行了三个DEMO。
+	其一是运行Clippy大模型，使用Python自动编写游戏代码。
+	其二是使用Da Vinci进行视频编辑，借助了本地AI加快效率，包括改变背景、编辑衣服颜色、增加飞行特效文字等。
+	其三是运行了一个开发工具包，可用于自动填充颜色、自动缩放等图片编辑功能，当然也是基于AI的。
+	不过很可惜，Intel没有分享任何性能数据，哪怕是tokens输出速度都没有展示。
+	【本文结束】如需转载请务必注明出处：快科技
+</body></doc>

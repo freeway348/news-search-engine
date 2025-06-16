@@ -7,6 +7,7 @@ Created on Wed Dec 23 14:06:10 2015
 
 from os import listdir
 import xml.etree.ElementTree as ET
+import os
 import jieba
 import jieba.analyse
 import sqlite3
@@ -16,7 +17,8 @@ import math
 
 import pandas as pd
 import numpy as np
-from sklearn.metrics.pairwise import cosine_similarity
+
+from sklearn.metrics import pairwise_distances
 
 class RecommendationModule:
     stop_words = set()
@@ -33,13 +35,6 @@ class RecommendationModule:
     db_path = ''
     
     def __init__(self, config_path, config_encoding):
-        self.config = configparser.ConfigParser()
-        with open(config_path, encoding=config_encoding) as f:
-            self.config.read_file(f)
-        self.k_nearest_matrix = []
-        # 添加k_nearest_path属性
-        self.k_nearest_path = self.config['DEFAULT']['k_nearest_path']
-
         self.config_path = config_path
         self.config_encoding = config_encoding
         config = configparser.ConfigParser()
@@ -116,42 +111,46 @@ class RecommendationModule:
         print('dt_matrix shape:(%d %d)'%(dt_matrix.shape))
         return dt_matrix
         
-    def construct_k_nearest_matrix(self, dt_matrix, k):
-        self.k_nearest_matrix = []
-        similarity_matrix = pd.DataFrame(cosine_similarity(dt_matrix))
-        
-        for i in range(len(similarity_matrix)):
-            # Series对象不需要指定axis参数
-            current_similarities = similarity_matrix.loc[i]
-            # 将当前文档自身的相似度设为最小值，避免被选中
-            current_similarities[i] = -1
-            # 获取前k个最相似文档的索引
-            top_k_indices = current_similarities.nlargest(k).index.tolist()
-            self.k_nearest_matrix.append(top_k_indices)
-        
-        # 将结果写入文件    
-        with open(self.k_nearest_path, 'w', encoding=self.config['DEFAULT']['k_nearest_encoding']) as f:
-            for doc_id, k_nearest_ids in enumerate(self.k_nearest_matrix):
-                f.write('%d %s\n'%(doc_id + 1, ' '.join(map(lambda x: str(x + 1), k_nearest_ids))))
-
+    def construct_k_nearest_matrix(self, similarity_matrix, k):
+        # 假设 similarity_matrix 是 DataFrame，遍历每一行，找出每行最大的k个索引
+        knearest = {}
+        for i in similarity_matrix.index:
+            # 取出当前行（Series），去掉自身（对角线）
+            row = similarity_matrix.loc[i].copy()
+            row[i] = -np.inf  # 排除自身
+            # 取最大k个索引
+            topk_idx = row.nlargest(k).index.tolist()
+            knearest[i] = topk_idx
+        self.k_nearest = [[int(key), value] for key, value in knearest.items()]
+    
     def gen_idf_file(self):
-        files = listdir(self.doc_dir_path)
+        files = os.listdir(self.doc_dir_path)
         n = float(len(files))
         idf = {}
         for i in files:
-            root = ET.parse(self.doc_dir_path + i).getroot()
-            title = root.find('title').text
-            body = root.find('body').text
-            seg_list = jieba.lcut(title + '。' + body, cut_all=False)
-            seg_list = set(seg_list) - self.stop_words
-            for word in seg_list:
-                word = word.strip().lower()
-                if word == '' or self.is_number(word):
-                    continue
-                if word not in idf:
-                    idf[word] = 1
-                else:
-                    idf[word] = idf[word] + 1
+            if not i.endswith('.xml'):
+                continue
+            xml_path = os.path.join(self.doc_dir_path, i)
+            try:
+                root = ET.parse(xml_path).getroot()
+                title = root.find('title').text
+                body = root.find('body').text
+                seg_list = jieba.lcut(title + '。' + body, cut_all=False)
+                seg_list = set(seg_list) - self.stop_words
+                for word in seg_list:
+                    word = word.strip().lower()
+                    if word == '' or self.is_number(word):
+                        continue
+                    if word not in idf:
+                        idf[word] = 1
+                    else:
+                        idf[word] = idf[word] + 1
+            except ET.ParseError as e:
+                print(f"[XML解析错误] 文件: {xml_path}，错误信息: {e}")
+                continue
+            except Exception as e:
+                print(f"[其他错误] 文件: {xml_path}，错误信息: {e}")
+                continue
         idf_file = open(self.idf_path, 'w', encoding = 'utf-8')
         for word, df in idf.items():
             idf_file.write('%s %.9f\n'%(word, math.log(n / df)))
@@ -167,5 +166,7 @@ class RecommendationModule:
 if __name__ == "__main__":
     print('-----start time: %s-----'%(datetime.today()))
     rm = RecommendationModule('../config.ini', 'utf-8')
+    rm.find_k_nearest(5, 25)
+    print('-----finish time: %s-----'%(datetime.today()))
     rm.find_k_nearest(5, 25)
     print('-----finish time: %s-----'%(datetime.today()))

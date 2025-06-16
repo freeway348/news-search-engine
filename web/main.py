@@ -2,22 +2,23 @@
 __author__ = 'lcl'
 
 from flask import Flask, render_template, request
-
 from search_engine import SearchEngine
-
 import xml.etree.ElementTree as ET
 import sqlite3
 import configparser
 import time
-
 import jieba
+import os  # 修复：全局导入os
 
 app = Flask(__name__)
 
-doc_dir_path = ''
+# 全局变量初始化，避免未定义报错
+dir_path = ''
 db_path = ''
-global page
-global keys
+page = []
+keys = ''
+checked = ['checked="true"', '', '']
+doc_id = []
 
 def init():
     try:
@@ -25,9 +26,7 @@ def init():
         config_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'config.ini')
         if not config.read(config_path, encoding='utf-8'):
             raise FileNotFoundError(f"无法读取配置文件: {config_path}")
-            
         global dir_path, db_path
-        # 转换为绝对路径
         dir_path = os.path.abspath(os.path.join(
             os.path.dirname(config_path),
             config.get('DEFAULT', 'doc_dir_path')
@@ -36,13 +35,10 @@ def init():
             os.path.dirname(config_path),
             config.get('DEFAULT', 'db_path')
         ))
-        
-        # 验证路径是否存在
         if not os.path.exists(dir_path):
             raise FileNotFoundError(f"新闻数据目录不存在: {dir_path}")
         if not os.path.exists(db_path):
             raise FileNotFoundError(f"数据库文件不存在: {db_path}")
-            
     except Exception as e:
         print(f"配置初始化错误: {str(e)}")
         raise
@@ -94,7 +90,7 @@ def searchidlist(key, selected=0):
         config_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'config.ini')
         se = SearchEngine(config_path, 'utf-8')
         flag, id_scores = se.search(key, selected)
-        if not id_scores:  # 如果搜索结果为空
+        if not id_scores:
             return 0, []
         # 返回docid列表
         doc_id = [i for i, s in id_scores]
@@ -108,6 +104,7 @@ def searchidlist(key, selected=0):
 
 
 def cut_page(page, no):
+    global doc_id
     docs = find(doc_id[no*10:page[no]*10])
     return docs
 
@@ -130,14 +127,14 @@ def find(docid, extra=False):
             body = root.find('body').text
             snippet = body[0:120] + '……' if body else ''
             datetime = root.find('datetime').text
-            time = datetime.split(' ')[0] if datetime else ''
+            time_str = datetime.split(' ')[0] if datetime else ''
             
             doc = {
                 'url': url,
                 'title': title,
                 'snippet': snippet,
                 'datetime': datetime,
-                'time': time,
+                'time': time_str,
                 'body': body,
                 'id': id,
                 'extra': []

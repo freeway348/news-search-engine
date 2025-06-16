@@ -2,6 +2,73 @@
 <html lang="en">
 <head>
     <title>{{doc.title}}</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #f4f6fa;
+            margin: 0;
+            padding: 0;
+        }
+        #basic {
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            width: 900px;
+            margin: 30px auto 0 auto;
+            padding: 30px 40px 10px 40px;
+        }
+        #basic h1 {
+            color: #2d6cdf;
+            margin-bottom: 10px;
+        }
+        #basic p {
+            color: #888;
+            margin: 6px 0 12px 0;
+        }
+        #basic a {
+            color: #2d6cdf;
+            text-decoration: none;
+            word-break: break-all;
+        }
+        #basic a:hover {
+            text-decoration: underline;
+        }
+        #detail {
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            width: 900px;
+            margin: 18px auto 0 auto;
+            padding: 28px 40px 18px 40px;
+            font-size: 1.15em;
+            color: #222;
+            line-height: 1.8;
+        }
+        #recommend {
+            background: #f8fafc;
+            border-radius: 10px;
+            box-shadow: 0 1px 4px rgba(44,108,223,0.07);
+            width: 900px;
+            margin: 18px auto 0 auto;
+            padding: 18px 40px 18px 40px;
+        }
+        #recommend h2 {
+            color: #2d6cdf;
+            margin-bottom: 12px;
+        }
+        #recommend a {
+            color: #2d6cdf;
+            text-decoration: none;
+        }
+        #recommend a:hover {
+            text-decoration: underline;
+        }
+        hr {
+            border: none;
+            border-top: 1.5px solid #e3e8f0;
+            margin: 25px 0 18px 0;
+        }
+    </style>
 </head>
 <body>
     <div id="basic" align="center">
@@ -9,23 +76,21 @@
         <p>{{doc.datetime}}</p>
         <p><a href="{{doc.url}}" target="_blank">{{doc.url}}</a></p>
     </div>
-    <hr/>
     <div id="detail" align="center">
-        <table width="1000" border="0">
+        <table width="100%" border="0">
             <tr>
-                <td style="width:1000px"><p>{{doc.body}}</p></td>
+                <td><p>{{doc.body}}</p></td>
             </tr>
         </table>
     </div>
-    <hr/>
-    <div align="center">
-        <table width="1000" border="0">
+    <div id="recommend" align="center">
+        <table width="100%" border="0">
             <tr>
-                <td style="width:1000px"><h2>推荐阅读</h2></td>
+                <td><h2>推荐阅读</h2></td>
             </tr>
             {% for each in doc.extra %}
             <tr>
-                <td style="width:1000px"><a href="/search/{{each.id}}/" target="_blank">{{each.title}}</a></td>
+                <td style="padding-bottom:7px;"><a href="/search/{{each.id}}/" target="_blank">{{each.title}}</a></td>
             </tr>
             {% endfor %}
         </table>

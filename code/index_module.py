@@ -7,6 +7,7 @@ Created on Sat Dec  5 23:31:22 2015
 
 from os import listdir
 import xml.etree.ElementTree as ET
+import os
 import jieba
 import sqlite3
 import configparser
@@ -41,6 +42,9 @@ class IndexModule:
         f = open(config['DEFAULT']['stop_words_path'], encoding = config['DEFAULT']['stop_words_encoding'])
         words = f.read()
         self.stop_words = set(words.split('\n'))
+        
+        self.config = configparser.ConfigParser()
+        self.config.read(config_path, encoding=config_encoding)
 
     def is_number(self, s):
         try:
@@ -81,10 +85,24 @@ class IndexModule:
     def construct_postings_lists(self):
         config = configparser.ConfigParser()
         config.read(self.config_path, self.config_encoding)
-        files = listdir(config['DEFAULT']['doc_dir_path'])
+        doc_dir = self.config['DEFAULT']['doc_dir_path']
+        # 确保路径以斜杠结尾
+        if not doc_dir.endswith(os.sep):
+            doc_dir += os.sep
+        files = os.listdir(doc_dir)
         AVG_L = 0
         for i in files:
-            root = ET.parse(config['DEFAULT']['doc_dir_path'] + i).getroot()
+            if not i.endswith('.xml'):
+                continue
+            xml_path = doc_dir + i
+            try:
+                root = ET.parse(xml_path).getroot()
+            except ET.ParseError as e:
+                print(f"[XML解析错误] 文件: {xml_path}，错误信息: {e}")
+                continue
+            except Exception as e:
+                print(f"[其他错误] 文件: {xml_path}，错误信息: {e}")
+                continue
             title = root.find('title').text
             body = root.find('body').text
             docid = int(root.find('id').text)

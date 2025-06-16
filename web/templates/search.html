@@ -1,30 +1,141 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>News Search Engine</title>
+    <title>新闻搜索引擎</title>
     <style type="text/css">
-        div#doc {width:800px}
-    .pagination-page-info {
-        padding: .6em;
-        padding-left: 0;
-        width: 40em;
-        margin: .5em;
-        margin-left: 0;
-        font-size: 12px;
-    }
-    .pagination-page-info b {
-        color: black;
-        background: #6aa6ed;
-        padding-left: 2px;
-        padding: .1em .25em;
-        font-size: 150%;
-    }
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #f4f6fa;
+            margin: 0;
+            padding: 0;
+        }
+        #container {
+            width: 850px;
+            margin: 30px auto 0 auto;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            padding: 30px 40px 20px 40px;
+        }
+        #header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        #header h1 {
+            color: #2d6cdf;
+            margin-bottom: 18px;
+            font-size: 2.5em;
+            letter-spacing: 2px;
+        }
+        form[name="search"] input[type="text"] {
+            width: 350px;
+            padding: 10px 14px;
+            border: 1px solid #bfc9d9;
+            border-radius: 5px;
+            font-size: 1.1em;
+            transition: border 0.2s;
+        }
+        form[name="search"] input[type="text"]:focus {
+            border: 1.5px solid #2d6cdf;
+            outline: none;
+        }
+        form[name="search"] input[type="submit"] {
+            padding: 10px 28px;
+            background: #2d6cdf;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.1em;
+            margin-left: 10px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        form[name="search"] input[type="submit"]:hover {
+            background: #1a4e9b;
+        }
+        #doc {
+            background: #f8fafc;
+            border-radius: 7px;
+            box-shadow: 0 1px 4px rgba(44,108,223,0.07);
+            margin-bottom: 18px;
+            padding: 18px 22px 12px 22px;
+            width: 100%;
+        }
+        #doc ul#navigation {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        #doc p {
+            margin: 7px 0;
+            color: #333;
+        }
+        #doc a {
+            color: #2d6cdf;
+            text-decoration: none;
+            word-break: break-all;
+        }
+        #doc a:hover {
+            text-decoration: underline;
+        }
+        .pagination {
+            text-align: center;
+            margin: 18px 0 10px 0;
+        }
+        .pagination a {
+            display: inline-block;
+            margin: 0 4px;
+            padding: 6px 13px;
+            background: #e9eef7;
+            color: #2d6cdf;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 1em;
+            transition: background 0.2s;
+        }
+        .pagination a:hover {
+            background: #2d6cdf;
+            color: #fff;
+        }
+        .pagination-page-info {
+            padding: .6em;
+            padding-left: 0;
+            width: 40em;
+            margin: .5em;
+            margin-left: 0;
+            font-size: 12px;
+        }
+        .pagination-page-info b {
+            color: black;
+            background: #6aa6ed;
+            padding-left: 2px;
+            padding: .1em .25em;
+            font-size: 150%;
+        }
+        #footer {
+            text-align: center;
+            color: #888;
+            font-size: 0.98em;
+            margin-top: 30px;
+        }
+        #footer a {
+            color: #2d6cdf;
+            text-decoration: none;
+        }
+        #footer a:hover {
+            text-decoration: underline;
+        }
+        hr {
+            border: none;
+            border-top: 1.5px solid #e3e8f0;
+            margin: 25px 0 18px 0;
+        }
     </style>
 </head>
 <body>
     <div id="container">
         <div id="header">
-            <h1>News Search Engine</h1>
+            <h1>新闻搜索引擎</h1>
             <form name="search" action="/search/" method="POST">
                 <p>
                     {% if key %}
@@ -44,37 +155,34 @@
             <div id="doc">
                 <ul id="navigation">
                     <p><big><a href="/search/{{doc.id}}/" target="_blank">{{doc.title}}</a></big></p>
-                    <p>{{doc.time}}<br/>{{doc.snippet}}<br/>
-                    <a href="{{ doc.url }}" target="_blank">{{doc.url}}</a>
-                    </p>
+                    <p style="color:#888;font-size:0.98em;">{{doc.time}}</p>
+                    <p>{{doc.snippet}}</p>
+                    <p><a href="{{ doc.url }}" target="_blank">{{doc.url}}</a></p>
                 </ul>
             </div>
-            <br/>
             {% endfor %}
-        {% block next %}
-        <ul>
-            {% for i in page %}
-                <a href="/search/page/{{i}}/">{{i}}</a>&nbsp;
-            {% endfor %}
-        </ul>
-        {% endblock %}
-        {% else %}
-            <p>对不起，没有您搜索的网页！</p>
-        {% endif %}
-		
-		<div id="footer">
-			<hr>
-            &copy; 
-
-			<script type="text/javascript">
-			var today = new Date();
-			var year = today.getFullYear();
-			document.write(year)
-			</script>
-
-			<a href="https://github.com/01joy/news-search-engine" target="_blank">https://github.com/01joy/news-search-engine</a>
+        <div class="pagination">
+            {% block next %}
+            <ul style="display:inline;padding:0;margin:0;">
+                {% for i in page %}
+                    <a href="/search/page/{{i}}/">{{i}}</a>
+                {% endfor %}
+            </ul>
+            {% endblock %}
         </div>
-		
+        {% else %}
+            <p style="text-align:center;color:#c00;font-size:1.1em;">对不起，没有您搜索的网页！</p>
+        {% endif %}
+        <div id="footer">
+            <hr>
+            &copy;
+            <script type="text/javascript">
+            var today = new Date();
+            var year = today.getFullYear();
+            document.write(year)
+            </script>
+            <a href="https://github.com/freeway348/news-search-engine" target="_blank">https://github.com/freeway348/news-search-engine</a>
+        </div>
     </div>
 </body>
 </html>
